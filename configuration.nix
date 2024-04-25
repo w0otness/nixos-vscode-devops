@@ -2,16 +2,18 @@
   config,
   pkgs,
   lib,
-  modulesPath,
-  specialArgs,
-  options
+  ...
 }:
 
 {
+  system.stateVersion = "23.11";
+
   imports = [
+    ./boot.nix
     #./bootstrap.nix
-    ./hostkeys.nix
     ./hardware-configuration.nix
+    ./cacert.nix # ca cert
+    ./hostkeys.nix # ssh host keys
   ];
 
   # show ip on login screen
@@ -28,16 +30,27 @@
 
   users.users.vm = {
     isNormalUser = true;
+    extraGroups = [];
+    # per user packages, these should go in per dev repo when vscode can set env from repo 
+    # packages = with pkgs; [
+    #   nodejs-18_x
+    #   azure-cli
+    #   (python311.withPackages(ps: with ps; [ mkdocs ]))
+    # ];
   };
   
   # packages for all users
   environment.systemPackages = with pkgs; [
     btop
     git
+    nixd
   ];
 
   # run unpatched binaries (vscode)
   programs.nix-ld.enable = true;
+
+  # direnv for vscode
+  programs.direnv.enable = true;
 
   # Enable the OpenSSH daemon.
   services.openssh = {
@@ -55,19 +68,4 @@
       defaultNetwork.settings.dns_enabled = true;
     };
   };
-
-  # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
-
-  # This value determines the NixOS release from which the default
-  # settings for stateful data, like file locations and database versions
-  # on your system were taken. It's perfectly fine and recommended to leave
-  # this value at the release version of the first install of this system.
-  # Before changing this value read the documentation for this option
-  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "23.11"; # Did you read the comment?
-
 }
